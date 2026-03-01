@@ -9,7 +9,6 @@ void firstUnion(FirstFollow *ff, NON_TERMINAL nt1, NON_TERMINAL nt2) {
   int nt1_next = ff->first_count[nt1];
 
   for (int i = 0; i < ff->first_count[nt2]; i++) {
-    TOKEN_TYPE tok = ff->first[nt2][i];
     int j;
     for (j = 0; j < nt1_next; j++) {
       if (ff->first[nt1][j] == ff->first[nt2][i]) {

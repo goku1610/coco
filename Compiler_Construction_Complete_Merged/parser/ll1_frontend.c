@@ -83,6 +83,7 @@ FirstFollow computeFirstFollowSet(grammar G) {
 }
 
 parseTree *parseInputSourceCode(table T, FirstFollow F, grammar G, FILE *fp) {
+  (void)F;
   
   grammar_element *symbolStack[200];
   parseTree *treeNodeStack[200];
