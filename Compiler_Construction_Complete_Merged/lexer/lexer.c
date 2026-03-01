@@ -1,12 +1,53 @@
-
-#include "lexer/stream_lexer.h"
+#include "lexer/lexer.h"
 #include "shared/ascii_text.h"
-#include "lexer/keyword_bank.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
+trie createTrieNode()
+{
+    trie node = (trie)malloc(sizeof(Trie));
+    for (int i = 0; i < ALPHABET_SIZE; i++)
+    {
+        node->children[i] = NULL;
+    }
+    node->tokenType = TK_FIELDID;
+    return node;
+}
+
+void insert(trie root, char* key, TOKEN_TYPE tokenType)
+{
+    trie temp = root;
+    for (int i = 0; key[i] != '\0'; i++)
+    {
+        int index = key[i] - 'a';
+        if (temp->children[index] == NULL)
+        {
+            temp->children[index] = createTrieNode();
+        }
+        temp = temp->children[index];
+    }
+    temp->tokenType = tokenType;
+}
+
+TOKEN_TYPE search(trie root, char* key)
+{
+    trie temp = root;
+    for (int i = 0; key[i] != '\0'; i++)
+    {
+        int index = key[i] - 'a';
+        if (temp->children[index] == NULL)
+        {
+            return TK_FIELDID;
+        }
+        temp = temp->children[index];
+    }
+    return temp->tokenType;
+}
+
+
 static trie keywordsLookupTable;
 static int lexicalErrorCount = 0;
+static FILE *activeSourceFile = NULL;
 
 #define STATE_INFO_OK(next_state, returning, token_type, redact) \
   (STATE_INFO){(next_state), (returning), (token_type), (redact), 0}
@@ -210,7 +251,7 @@ STATE_INFO getNextState(STATE currentState, char nextSymbol) {
     if (nextSymbol >= '0' && nextSymbol <= '9') {
       return STATE_INFO_OK(S47, false, NULL_TOKEN, 0);
     } else {
-      return STATE_INFO_OK(START, true, TK_NUM, 2);
+      return STATE_INFO_OK(START, true, TK_ERROR, 1);
     }
   }
   case S47: {
@@ -325,6 +366,8 @@ void initializeLookupTable() {
 
 char *getTokenName(TOKEN_TYPE type) {
   switch (type) {
+  case TK_ERROR:
+    return "TK_ERROR";
   case TK_ASSIGNOP:
     return "TK_ASSIGNOP";
   case TK_COMMENT:
@@ -572,6 +615,12 @@ void handle_invalid_error(STATE_INFO state, twinBuffer B, int start, int end) {
 
 
 bool handle_valid_error(tokenInfo token) {
+  if (token->type == TK_ERROR) {
+    lexicalErrorCount++;
+    printf("Line %02d: Lexical Error: Invalid numeric lexeme %s\n", token->line,
+           token->lexeme);
+    return true;
+  }
   if (token->type == TK_ID) {
     if (token->lexemeSize > 20) {
       lexicalErrorCount++;
@@ -601,11 +650,11 @@ bool handle_valid_error(tokenInfo token) {
 }
 
 
-tokenInfo getNextToken(twinBuffer B, FILE *fp) {
+tokenInfo getNextToken(twinBuffer B) {
   STATE currentState = START;
   
   if (B->buffer[B->index] == '%') {
-    handle_comments(B, fp);
+    handle_comments(B, activeSourceFile);
     char *lexeme = (char *)malloc(sizeof(char) * 2);
     lexeme[0] = '%';
     lexeme[1] = '\0';
@@ -694,8 +743,9 @@ void printbuffer(twinBuffer B) {
 
 
 tokenInfo nextToken(twinBuffer B, FILE *fp) {
+  activeSourceFile = fp;
   int before = B->index;
-  tokenInfo token = getNextToken(B, fp);
+  tokenInfo token = getNextToken(B);
   bool flag = false;
   if (token != NULL) {
     if (token->type == NEWLINE || token->type == TK_COMMENT) {
@@ -711,10 +761,16 @@ tokenInfo nextToken(twinBuffer B, FILE *fp) {
         return dollarToken;
       }
     }
-    if (token->type != NULL_TOKEN && token->type != NEWLINE &&
-        token->type != EXIT_TOKEN && token->type != BLANK) {
-      if (handle_valid_error(token))
+    if (token->type == TK_ERROR) {
+      (void)handle_valid_error(token);
+      free(token->lexeme);
+      free(token);
+      token = NULL;
+    } else if (token->type != NULL_TOKEN && token->type != NEWLINE &&
+               token->type != EXIT_TOKEN && token->type != BLANK) {
+      if (handle_valid_error(token)) {
         flag = true;
+      }
     }
   }
   int after = B->index;
@@ -737,8 +793,9 @@ tokenInfo nextToken(twinBuffer B, FILE *fp) {
 }
 
 
-void getStream(FILE *fp) {
+FILE *getStream(FILE *fp) {
   resetLexicalErrorCount();
+  activeSourceFile = fp;
   twinBuffer B = (twinBuffer)malloc(sizeof(TWIN_BUFFER));
   for (int i = 0; i < 2 * BUFFER_SIZE; i++) {
     B->buffer[i] = '\0';
@@ -750,9 +807,10 @@ void getStream(FILE *fp) {
   B->index = 0;
   populate_buffer(B, fp);
   initializeLookupTable();
+  printf("%-12s%-36s%-24s\n", "lineNo", "lexeme", "tokenName");
   while (B->buffer[B->index] != '\0') {
     int before = B->index;
-    tokenInfo token = getNextToken(B, fp);
+    tokenInfo token = getNextToken(B);
     if (token != NULL) {
       if (token->type == NEWLINE || token->type == TK_COMMENT) {
         B->line++;
@@ -760,7 +818,7 @@ void getStream(FILE *fp) {
       if (token->type != NULL_TOKEN && token->type != NEWLINE &&
           token->type != EXIT_TOKEN && token->type != BLANK) {
         if (handle_valid_error(token))
-          printf("Line no. %d Lexeme %s Token %s\n", token->line, token->lexeme,
+          printf("%-12d%-36s%-24s\n", token->line, token->lexeme,
                  getTokenName(token->type));
       }
       if (token->type == TK_COMMENT) {
@@ -774,6 +832,7 @@ void getStream(FILE *fp) {
     }
   }
   free(B);
+  return fp;
 }
 
 

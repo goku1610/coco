@@ -4,11 +4,12 @@
 #include "core/grammar_model.h"
 #include <stdio.h>
 
-void createParseTable(FirstFollow F, table *T);
+void buildParseTable(FirstFollow F, table *T);
 
-parseTree *parseInputSourceCode(table T, FirstFollow F, grammar G, FILE *fp);
+parseTree *parseInputSourceCodeStream(table T, FirstFollow F, grammar G,
+                                      FILE *fp);
 
-void printParseTree(parseTree *PT, FILE *outfile);
+void printParseTreeInorder(parseTree *PT, FILE *outfile);
 void writeParseTreeDot(parseTree *PT, FILE *outfile);
 
 FirstFollow computeFirstFollowSet(grammar G);

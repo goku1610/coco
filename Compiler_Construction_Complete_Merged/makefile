@@ -3,9 +3,9 @@ CFLAGS = -Wall -Wextra -std=c11 -Iinclude
 BUILD_DIR = build
 
 SOURCES = \
-	app/driver_console.c \
-	lexer/stream_lexer.c \
-	lexer/keyword_bank.c \
+	app/driver.c \
+	lexer/lexer.c \
+	parser/parser.c \
 	parser/ll1_frontend.c \
 	parser/first_follow.c \
 	shared/ascii_text.c

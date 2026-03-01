@@ -1,5 +1,5 @@
 
-#include "lexer/stream_lexer.h"
+#include "lexer/lexer.h"
 #include "core/token_model.h"
 #include "core/grammar_model.h"
 #include "parser/first_follow.h"
@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-void createParseTable(FirstFollow F, table *T) {
+void buildParseTable(FirstFollow F, table *T) {
   for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
     for (int j = 0; j < TOTAL_TOKENS; j++) {
       T->table[i][j] = -1;
@@ -82,7 +82,8 @@ FirstFollow computeFirstFollowSet(grammar G) {
   return ff;
 }
 
-parseTree *parseInputSourceCode(table T, FirstFollow F, grammar G, FILE *fp) {
+parseTree *parseInputSourceCodeStream(table T, FirstFollow F, grammar G,
+                                      FILE *fp) {
   (void)F;
   
   grammar_element *symbolStack[200];
@@ -292,7 +293,7 @@ parseTree *parseInputSourceCode(table T, FirstFollow F, grammar G, FILE *fp) {
   free(B);
 
   if (!error_encountered)
-    printf("COMPILATION SUCCESS!\n");
+    printf("Input source code is syntactically correct...........\n");
   else
     printf("COMPILATION FAILED\n");
 
@@ -307,54 +308,62 @@ parseTree *parseInputSourceCode(table T, FirstFollow F, grammar G, FILE *fp) {
   return root;
 }
 
-void printParseTree(parseTree *PT, FILE *outfile) {
+static void printLineEntry(parseTree *PT, FILE *outfile) {
+  const int isLeaf = (PT->no_of_children == 0);
+  const int isTerminal = PT->ele.symbol.terminal;
+  const char *lexeme = (isLeaf && PT->ele.lexeme != NULL) ? PT->ele.lexeme : "----";
+  const char *lineText = (isLeaf && PT->ele.line >= 0) ? NULL : "----";
+  const char *tokenName = isTerminal ? getTokenName(PT->ele.symbol.var.t) : "----";
+  const char *valueIfNumber =
+      (isTerminal && (PT->ele.symbol.var.t == TK_NUM || PT->ele.symbol.var.t == TK_RNUM) &&
+       PT->ele.lexeme != NULL)
+          ? PT->ele.lexeme
+          : "----";
+
+  const char *parentSymbol = "ROOT";
+  if (PT->parent != NULL) {
+    parentSymbol = getNonTerminal(PT->parent->ele.symbol.var.nt);
+  }
+
+  const char *nodeSymbol =
+      isTerminal ? getTokenName(PT->ele.symbol.var.t) : getNonTerminal(PT->ele.symbol.var.nt);
+
+  fprintf(outfile, "%-30s", lexeme);
+  if (lineText == NULL) {
+    fprintf(outfile, "%-30d", PT->ele.line);
+  } else {
+    fprintf(outfile, "%-30s", lineText);
+  }
+  fprintf(outfile, "%-30s%-30s%-30s%-30s%-30s\n", tokenName, valueIfNumber,
+          parentSymbol, isLeaf ? "YES" : "NO", nodeSymbol);
+}
+
+static void printParseTreeInorderRec(parseTree *PT, FILE *outfile) {
   if (PT == NULL) {
     return;
   }
-  static int flag = 1; 
-  if (flag) {
-    flag = 0;
-    
-    fprintf(outfile, "%-30s%-30s%-30s%-30s%-30s%-30s%-30s\n\n", "lexeme",
-            "lineno", "token", "valueIfNumber", "parentNodeSymbol",
-            "isLeafNode(yes/no)", "NodeSymbol");
-  }
   if (PT->no_of_children != 0 && PT->children[0] != NULL) {
-    printParseTree(PT->children[0], outfile);
+    printParseTreeInorderRec(PT->children[0], outfile);
   }
   if (outfile != NULL) {
-    if (PT != NULL) {
-      fprintf(outfile, "%-30s",
-              (PT->ele.lexeme != NULL) ? PT->ele.lexeme : "----");
-      fprintf(outfile, "%-30d", PT->ele.line);
-
-      if (PT->ele.symbol.terminal) {
-        fprintf(outfile, "%-30s", getTokenName(PT->ele.symbol.var.t));
-      } else {
-        fprintf(outfile, "%-30s", getNonTerminal(PT->ele.symbol.var.nt));
-      }
-      if ((PT->ele.symbol.terminal) && ((PT->ele.symbol.var.t == TK_RNUM) ||
-                                        (PT->ele.symbol.var.t == TK_NUM))) {
-        fprintf(outfile, "%-30s", PT->ele.lexeme);
-      } else {
-        fprintf(outfile, "%-30s", "----");
-      }
-      if (PT->parent != NULL) {
-        fprintf(outfile, "%-30s",
-                getNonTerminal(PT->parent->ele.symbol.var.nt));
-        fprintf(outfile, "%-30s", (PT->no_of_children == 0) ? "YES" : "NO");
-        fprintf(outfile, "%-30s", getTokenName(PT->ele.symbol.var.t));
-        fprintf(outfile, "\n");
-      } else {
-        fprintf(outfile, "%-30s%-30s%-30s\n", "----", "----", "----");
-      }
-    }
+    printLineEntry(PT, outfile);
     for (int i = 1; i < PT->no_of_children; i++) {
       if (PT->children[i] != NULL) {
-        printParseTree(PT->children[i], outfile);
+        printParseTreeInorderRec(PT->children[i], outfile);
       }
     }
   }
+}
+
+void printParseTreeInorder(parseTree *PT, FILE *outfile) {
+  if (PT == NULL || outfile == NULL) {
+    return;
+  }
+
+  fprintf(outfile, "%-30s%-30s%-30s%-30s%-30s%-30s%-30s\n\n",
+          "lexemeCurrentNode", "lineno", "tokenName", "valueIfNumber",
+          "parentNodeSymbol", "isLeafNode(yes/no)", "NodeSymbol");
+  printParseTreeInorderRec(PT, outfile);
 }
 
 static void writeEscapedDotText(FILE *outfile, const char *text) {

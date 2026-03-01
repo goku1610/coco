@@ -22,8 +22,7 @@ The codebase has been reorganized and renamed into a new structure while preserv
 - `include/`
   - `core/token_model.h`
   - `core/grammar_model.h`
-  - `lexer/stream_lexer.h`
-  - `lexer/keyword_bank.h`
+  - `lexer/lexer.h`
   - `parser/ll1_frontend.h`
   - `parser/first_follow.h`
   - `shared/ascii_text.h`

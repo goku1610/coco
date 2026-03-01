@@ -6,7 +6,7 @@
 
 #define BUFFER_SIZE 50
 #define TOTAL_STATES 64
-#define TOTAL_TOKENS 63
+#define TOTAL_TOKENS 64
 
 static const char alphabet[] = {
     'a', 'b', 'c', 'd',  'e',  'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
@@ -148,7 +148,8 @@ typedef enum TOKEN_TYPE {
   EXIT_TOKEN,
   BLANK,
   EPSILLON, 
-  DOLLAR,   
+  DOLLAR,
+  TK_ERROR,
 } TOKEN_TYPE;
 
 typedef struct TOKEN {

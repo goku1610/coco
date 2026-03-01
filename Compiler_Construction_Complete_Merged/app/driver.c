@@ -1,4 +1,4 @@
-#include "lexer/stream_lexer.h"
+#include "lexer/lexer.h"
 #include "parser/ll1_frontend.h"
 #include "core/grammar_model.h"
 #include "parser/first_follow.h"
@@ -224,6 +224,8 @@ static int buildOutputPath(const char *requestedName, char *resolvedPath,
 }
 
 int main(int argc, char *argv[]) {
+  printf("(c) Both lexical and syntax analysis modules implemented\n");
+
   if (argc > 3) {
     printf("Usage: %s [inputFilePath [outputFileName]]\n", argv[0]);
     return 1;
@@ -266,7 +268,7 @@ int main(int argc, char *argv[]) {
   grammar G = initializeGrammar();
   FirstFollow ff = computeFirstFollowSet(G);
   table T;
-  createParseTable(ff, &T);
+  buildParseTable(ff, &T);
 
   while (1) {
     int choice = -1;
@@ -283,7 +285,21 @@ int main(int argc, char *argv[]) {
 
     case 1: {
       removeComments(inputPath, outputPath);
-      printf("Comment-free source written to %s\n\n", outputPath);
+      printf("==== Comment-free Source ====\n");
+      FILE *clean = fopen(outputPath, "r");
+      if (clean == NULL) {
+        printf("Unable to open generated comment-free file: %s\n\n", outputPath);
+        break;
+      }
+      int ch;
+      while ((ch = fgetc(clean)) != EOF) {
+        putchar(ch);
+      }
+      fclose(clean);
+      if (ch != '\n') {
+        putchar('\n');
+      }
+      printf("==== End Comment-free Source ====\n\n");
       break;
     }
 
@@ -314,8 +330,8 @@ int main(int argc, char *argv[]) {
       }
 
       printf("==== Parsing... ====\n");
-      parseTree *root = parseInputSourceCode(T, ff, G, inputFile);
-      printParseTree(root, outputFile);
+      parseTree *root = parseInputSourceCodeStream(T, ff, G, inputFile);
+      printParseTreeInorder(root, outputFile);
 
       char dotPath[600];
       char svgPath[600];
@@ -354,14 +370,15 @@ int main(int argc, char *argv[]) {
       }
 
       clock_t start_time = clock();
-      parseTree *root = parseInputSourceCode(T, ff, G, inputFile);
+      parseTree *root = parseInputSourceCodeStream(T, ff, G, inputFile);
       (void)root;
       clock_t end_time = clock();
 
-      double ticks = (double)(end_time - start_time);
+      double total_CPU_time = (double)(end_time - start_time);
+      double total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
       printf("Parsing complete.\n");
-      printf("CPU ticks: %.0f\n", ticks);
-      printf("CPU time (seconds): %.6f\n\n", ticks / CLOCKS_PER_SEC);
+      printf("total_CPU_time: %.0f\n", total_CPU_time);
+      printf("total_CPU_time_in_seconds: %.6f\n\n", total_CPU_time_in_seconds);
       fclose(inputFile);
       break;
     }
