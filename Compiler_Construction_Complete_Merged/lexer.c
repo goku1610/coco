@@ -34,6 +34,10 @@ TOKEN_TYPE search(trie root, char* key)
     trie temp = root;
     for (int i = 0; key[i] != '\0'; i++)
     {
+        if (key[i] < 'a' || key[i] > 'z')
+        {
+            return TK_FIELDID;
+        }
         int index = key[i] - 'a';
         if (temp->children[index] == NULL)
         {
@@ -544,72 +548,29 @@ void handle_comments(twinBuffer B, FILE *fp) {
 
 void handle_invalid_error(STATE_INFO state, twinBuffer B, int start, int end) {
   lexicalErrorCount++;
-  printf("Line %02d: Lexical Error: ", B->line);
-  printf("Error: ");
+  char pattern[2 * BUFFER_SIZE + 1];
+  int p = 0;
+
   if (start == end) {
-    printf("Unknown symbol <");
-    printf("%c", B->buffer[start]);
-    printf(">\n");
+    pattern[p++] = B->buffer[start];
+    pattern[p] = '\0';
+    printf("Line No %d : Error: Unknown Symbol <%s>\n", B->line, pattern);
     B->index = (end + 1) % (2 * BUFFER_SIZE);
     return;
   }
-  printf("Unknown pattern <");
+
   while (start != end) {
-    printf("%c", B->buffer[start]);
+    pattern[p++] = B->buffer[start];
     start++;
     start = start % (2 * BUFFER_SIZE);
   }
-  printf("> ");
+  pattern[p] = '\0';
   B->index = end;
-  int error_type = state.error;
-  switch (error_type) {
-  case 1: {
-    printf(": Expected @@@\n");
-    break;
-  }
-  case 2: {
-    printf(": Expected !=\n");
-    break;
-  }
-  case 3: {
-    printf(": Expected &&&\n");
-    break;
-  }
-  case 4: {
-    printf(": Expected ==\n");
-    break;
-  }
-  case 5: {
-    printf(": Expected <---\n");
-    break;
-  }
-  case 6: {
-    printf(": Expected a letter [a-z]|[A-Z] after _\n");
-    break;
-  }
-  case 7: {
-    printf(": Expected a lowercase letter [a-z] after #\n");
-    break;
-  }
-  case 8: {
-    printf(": Expected a two digits [0-9] after decimal . but got one\n");
-    break;
-  }
-  case 9: {
-    printf(": Expected a digit [0-9] or +|- after E\n");
-    break;
-  }
-  case 10: {
-    printf(": Expected a digit [0-9] after +|-|E\n");
-    break;
-  }
-  case 11: {
-    printf(": Expected a two digits [0-9] after E|+|- but got one\n");
-    break;
-  }
-  default: {
-    printf("\n");
-  }
+
+  if (state.error == 4) {
+    printf("Line No %d: Error : Unknown Symbol <%s>\n", B->line, pattern);
+  } else {
+    printf("Line no: %d : Error: Unknown pattern <%s>\n", B->line, pattern);
   }
 }
 
@@ -617,17 +578,16 @@ void handle_invalid_error(STATE_INFO state, twinBuffer B, int start, int end) {
 bool handle_valid_error(tokenInfo token) {
   if (token->type == TK_ERROR) {
     lexicalErrorCount++;
-    printf("Line %02d: Lexical Error: Invalid numeric lexeme %s\n", token->line,
+    printf("Line no: %d : Error: Unknown pattern <%s>\n", token->line,
            token->lexeme);
     return true;
   }
   if (token->type == TK_ID) {
     if (token->lexemeSize > 20) {
       lexicalErrorCount++;
-      printf("Line %02d: Lexical Error: ", token->line);
-      printf("Error: Variable Identifier %s is longer than the prescribed "
-             "length of 20 characters\n",
-             token->lexeme);
+      printf("Line No %d: Error :Variable Identifier is longer than the "
+             "prescribed length of 20 characters.\n",
+             token->line);
       free(token->lexeme);
       free(token);
       return false;
@@ -636,10 +596,9 @@ bool handle_valid_error(tokenInfo token) {
   } else if (token->type == TK_FUNID) {
     if (token->lexemeSize > 30) {
       lexicalErrorCount++;
-      printf("Line %02d: Lexical Error: ", token->line);
-      printf("Error: Function Identifier %s is longer than the prescribed "
-             "length of 30 characters\n",
-             token->lexeme);
+      printf("Line No %d: Error :Function Identifier is longer than the "
+             "prescribed length of 30 characters.\n",
+             token->line);
       free(token->lexeme);
       free(token);
       return false;
@@ -807,7 +766,6 @@ FILE *getStream(FILE *fp) {
   B->index = 0;
   populate_buffer(B, fp);
   initializeLookupTable();
-  printf("%-12s%-36s%-24s\n", "lineNo", "lexeme", "tokenName");
   while (B->buffer[B->index] != '\0') {
     int before = B->index;
     tokenInfo token = getNextToken(B);
@@ -818,8 +776,8 @@ FILE *getStream(FILE *fp) {
       if (token->type != NULL_TOKEN && token->type != NEWLINE &&
           token->type != EXIT_TOKEN && token->type != BLANK) {
         if (handle_valid_error(token))
-          printf("%-12d%-36s%-24s\n", token->line, token->lexeme,
-                 getTokenName(token->type));
+          printf("Line no. %d\t Lexeme %s\t Token %s\n", token->line,
+                 token->lexeme, getTokenName(token->type));
       }
       if (token->type == TK_COMMENT) {
         continue;

@@ -1,0 +1,25 @@
+%Test Case 9: Syntactically incorrect testcase - HAS ERRORS
+%Used to check panic mode recovery and synchronization symbols
+_main
+    record #r
+        type int : x
+        type int : y;
+    endrecord
+
+    type record #r : b5c6;
+    type int : b3;
+
+    b3 <--- 1
+    while (b3 <= 5
+        b5c6.x <--- b3 + 1;
+        if((~(b5c6.x == 0)) && (b3 > 2))
+        then
+            write(b5c6.x)
+        else
+            write(b3);
+        endif
+        b3 <--- b3 + 1;
+    endwhile
+
+    return
+end

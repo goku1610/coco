@@ -1,1 +1,23 @@
-_main return ; end
+%Test Case 8: Syntactically correct testcase
+%Record fields, global declaration, boolean expression with NOT
+_main
+    record #marks
+        type int : maths;
+        type int : physics;
+    endrecord
+
+    type record #marks : b5c6;
+    type int : b3 : global;
+
+    b5c6.maths <--- 10;
+    b5c6.physics <--- 20;
+
+    if((~(b5c6.maths == 0)) &&& (b5c6.physics > 5))
+    then
+        write(b5c6.maths);
+    else
+        write(b5c6.physics);
+    endif
+
+    return;
+end
