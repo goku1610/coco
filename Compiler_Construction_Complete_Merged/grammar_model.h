@@ -2,7 +2,7 @@
 #ifndef GRAMMAR_MODEL_H
 #define GRAMMAR_MODEL_H
 
-#include "core/token_model.h"
+#include "token_model.h"
 
 #define NON_TERMINAL_COUNT 53
 #define MAX_RULE_SIZE 15

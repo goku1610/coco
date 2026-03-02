@@ -1,7 +1,7 @@
 
-#ifndef LL1_FRONTEND_H
-#define LL1_FRONTEND_H
-#include "core/grammar_model.h"
+#ifndef PARSE_RUNTIME_H
+#define PARSE_RUNTIME_H
+#include "grammar_model.h"
 #include <stdio.h>
 
 void buildParseTable(FirstFollow F, table *T);

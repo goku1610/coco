@@ -1,6 +1,6 @@
-#include "parser/parser.h"
-#include "parser/first_follow.h"
-#include "parser/ll1_frontend.h"
+#include "parser.h"
+#include "grammar_sets.h"
+#include "parse_runtime.h"
 
 #include <stdio.h>
 

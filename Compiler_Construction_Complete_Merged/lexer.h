@@ -1,7 +1,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "lexer/lexerDef.h"
+#include "lexerDef.h"
 #include <stdio.h>
 
 #define ALPHABET_SIZE 26

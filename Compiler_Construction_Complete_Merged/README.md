@@ -9,28 +9,28 @@ The codebase has been reorganized and renamed into a new structure while preserv
 
 ## Layout
 
-- `app/`
-  - `driver_console.c` (CLI entry + menu flow)
-- `lexer/`
-  - `stream_lexer.c`
-  - `keyword_bank.c`
-- `parser/`
-  - `ll1_frontend.c`
-  - `first_follow.c`
-- `shared/`
-  - `ascii_text.c`
-- `include/`
-  - `core/token_model.h`
-  - `core/grammar_model.h`
-  - `lexer/lexer.h`
-  - `parser/ll1_frontend.h`
-  - `parser/first_follow.h`
-  - `shared/ascii_text.h`
-- `resources/`
-  - `grammar_g13.txt`
-  - `grammar_g43.txt`
-- `tests/` (all testcase files from both source projects)
-- `docs/` (reference PDFs/DOCX and original README copies)
+All files are now at repository root (flat layout).
+
+Core source files:
+- `driver.c`
+- `lexer.c`
+- `parser.c`
+- `parse_runtime.c`
+- `grammar_sets.c`
+- `ascii_text.c`
+
+Core headers:
+- `lexer.h`, `lexerDef.h`
+- `parser.h`, `parserDef.h`
+- `parse_runtime.h`, `grammar_sets.h`
+- `token_model.h`, `grammar_model.h`
+- `ascii_text.h`
+
+Supporting files:
+- `grammar_g13.txt`, `grammar_g43.txt`
+- `testcase*.txt`, `t*.txt`, `lexemesandtokens_*.txt`
+- `README_g13.md`, `README_g43.md`
+- `coding_details_g13.docx`, `coding_details_g43.pdf`, `language_specification_g13.pdf`
 
 ## Build
 
@@ -41,13 +41,8 @@ make
 ## Run
 
 ```bash
-./stage1exe [inputFilePath [outputFileName]]
+./stage1exe testcase.txt parsetreeOutFile.txt
 ```
-
-All generated files are written inside `outputs/` in this project directory.
-Example: if you pass `result.txt`, output is saved as `outputs/result.txt`.
-If no command-line args are provided, the program lets you select a testcase
-from `tests/` interactively.
 
 ## Menu
 
@@ -56,10 +51,3 @@ from `tests/` interactively.
 - `2`: Print lexer token list
 - `3`: Parse code and write parse tree to output file
 - `4`: Parse code and print execution time
-
-## Parse Tree Visualization
-
-When you run menu option `3`, the compiler now also writes:
-
-- `outputs/<name>.dot` (Graphviz parse-tree graph)
-- `outputs/<name>.svg` (auto-generated if `dot` is installed)

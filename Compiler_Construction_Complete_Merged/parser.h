@@ -1,7 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "parser/parserDef.h"
+#include "parserDef.h"
 
 FirstAndFollow ComputeFirstAndFollowSets(grammar G);
 void createParseTable(FirstAndFollow F, table *T);

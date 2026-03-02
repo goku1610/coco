@@ -1,5 +1,5 @@
-#include "lexer/lexer.h"
-#include "shared/ascii_text.h"
+#include "lexer.h"
+#include "ascii_text.h"
 #include <stdbool.h>
 #include <stdlib.h>
 

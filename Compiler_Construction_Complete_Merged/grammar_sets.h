@@ -1,7 +1,7 @@
 
-#ifndef FIRST_FOLLOW_H
-#define FIRST_FOLLOW_H
-#include "core/grammar_model.h"
+#ifndef GRAMMAR_SETS_H
+#define GRAMMAR_SETS_H
+#include "grammar_model.h"
 
 grammar initializeGrammar();
 void firstUnion(FirstFollow *ff, NON_TERMINAL nt1, NON_TERMINAL nt2);

@@ -1,7 +1,7 @@
 
-#include "parser/first_follow.h"
-#include "core/token_model.h"
-#include "core/grammar_model.h"
+#include "grammar_sets.h"
+#include "token_model.h"
+#include "grammar_model.h"
 #include <stdlib.h>
 
 void firstUnion(FirstFollow *ff, NON_TERMINAL nt1, NON_TERMINAL nt2) {

@@ -1,8 +1,8 @@
 
-#include "lexer/lexer.h"
-#include "core/token_model.h"
-#include "core/grammar_model.h"
-#include "parser/first_follow.h"
+#include "lexer.h"
+#include "token_model.h"
+#include "grammar_model.h"
+#include "grammar_sets.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>

@@ -1,5 +1,5 @@
 
-#include "shared/ascii_text.h"
+#include "ascii_text.h"
 
 int stringcmp(char *a, char *b)
 {
