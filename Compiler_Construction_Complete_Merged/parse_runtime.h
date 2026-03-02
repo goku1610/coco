@@ -1,16 +1,16 @@
 
+
 #ifndef PARSE_RUNTIME_H
 #define PARSE_RUNTIME_H
 #include "grammar_model.h"
 #include <stdio.h>
 
-void buildParseTable(FirstFollow F, table *T);
 
-parseTree *parseInputSourceCodeStream(table T, FirstFollow F, grammar G,
+ void printParseTreeInorder(parseTree *PT, FILE *fp);
+ void buildParseTable(FirstFollow ff, table *T);
+FirstFollow computeFirstFollowSet(grammar G);
+parseTree *parseInputSourceCodeStream(table T, FirstFollow ff, grammar G,
                                       FILE *fp);
 
-void printParseTreeInorder(parseTree *PT, FILE *outfile);
-void writeParseTreeDot(parseTree *PT, FILE *outfile);
-
-FirstFollow computeFirstFollowSet(grammar G);
+void writeParseTreeDot(parseTree *PT, FILE *fp);
 #endif

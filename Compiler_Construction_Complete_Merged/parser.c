@@ -4,51 +4,66 @@
 
 #include <stdio.h>
 
-FirstAndFollow ComputeFirstAndFollowSets(grammar G) {
-  return computeFirstFollowSet(G);
+void printParseTree(parseTree *PT, char *outfile)
+{
+    if (PT == NULL || outfile == NULL)
+   {
+        return;
+    }
+
+    FILE *fp = fopen(outfile, "w");
+   if (fp == NULL)
+     {
+       printf("Unable to open output file: %s\n", outfile);
+        return;
+    }
+
+    printParseTreeInorder(PT, fp);
+
+    fclose(fp);
 }
 
-void createParseTable(FirstAndFollow F, table *T) {
-  if (T == NULL) {
-    return;
-  }
-  buildParseTable(F, T);
+void createParseTableStrict(FirstAndFollow ff, table *T)
+
+ {
+    createParseTable(ff, T);
+
 }
 
-void createParseTableStrict(FirstAndFollow F, table *T) {
-  createParseTable(F, T);
+FirstAndFollow ComputeFirstAndFollowSets(grammar G)
+{
+    return computeFirstFollowSet(G);
 }
 
-parseTree *parseInputSourceCode(char *testcaseFile, table T) {
-  if (testcaseFile == NULL) {
-    return NULL;
-  }
+parseTree *parseInputSourceCode(char *infile, table T)
+{
+    if (infile == NULL)
+    {
+        return NULL;
+    }
 
-  FILE *fp = fopen(testcaseFile, "r");
-  if (fp == NULL) {
-    printf("Unable to open input file: %s\n", testcaseFile);
-    return NULL;
-  }
+     FILE *fp = fopen(infile, "r");
+   if (fp == NULL)
+    {
+        printf("Unable to open input file: %s\n", infile);
+        return NULL;
+    }
 
-  grammar G = initializeGrammar();
-  FirstAndFollow F = ComputeFirstAndFollowSets(G);
-  buildParseTable(F, &T);
-  parseTree *root = parseInputSourceCodeStream(T, F, G, fp);
-  fclose(fp);
-  return root;
+    grammar G = initializeGrammar();
+   FirstAndFollow ff = ComputeFirstAndFollowSets(G);
+    buildParseTable(ff, &T);
+     parseTree *PT = parseInputSourceCodeStream(T, ff, G, fp);
+     fclose(fp);
+    return PT;
+
 }
 
-void printParseTree(parseTree *PT, char *outfile) {
-  if (PT == NULL || outfile == NULL) {
-    return;
-  }
+void createParseTable(FirstAndFollow ff, table *T)
+{
+    if (T == NULL)
+    {
+       return;
+    }
 
-  FILE *fp = fopen(outfile, "w");
-  if (fp == NULL) {
-    printf("Unable to open output file: %s\n", outfile);
-    return;
-  }
-
-  printParseTreeInorder(PT, fp);
-  fclose(fp);
+    buildParseTable(ff, T);
 }
